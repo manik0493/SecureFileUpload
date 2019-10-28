@@ -11,6 +11,7 @@ f.write(pub_key.publickey().export_key('PEM'))
 f.close()
 Configs.PUBLIC_KEY_FILE = 'mykey.pem'
 Configs.PUBLIC_KEY_OBJECT = pub_key
+Configs.CLIENT_SESSION_BOOK = {}
 
 app = Flask(__name__)
 api.init_app(app)
