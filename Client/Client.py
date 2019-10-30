@@ -39,7 +39,18 @@ def connect():
         print("Incorrect Nonce Recieved\n")
         return False
 
+
+def read_file():
+    byte_list = []
+    with open('test.png', 'rb') as f:
+        while True:
+            byte_s = f.read(1)
+            if not byte_s:
+                break
+            byte_list.append(byte_s)
+
 if __name__=='__main__':
+    # read_file()
     while(True):
         print_menu()
         choice = input("Please enter your choice: ")
@@ -47,10 +58,3 @@ if __name__=='__main__':
             print("Connected!\n")
         else:
             break
-
-
-
-
-
-
-
