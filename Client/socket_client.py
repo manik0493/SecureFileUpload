@@ -1,4 +1,7 @@
 import socket
+import sys
+sys.path.append('../shared')
+from message_type import MessageType
 
 class BaseClient(object):
     def __init__(self, address, port):
@@ -40,9 +43,9 @@ class JSONClient(BaseClient):
     def __init__(self, address, port):
         super().__init__(address, port)
 
-    def send(self, msg):
-        if not self._is_json(msg):
-            msg = json.dumps({"data": str(msg)})
+    def send(self, msg, msg_type=0):
+        # if not self._is_json(msg):
+        msg = json.dumps({"data": str(msg), "type": msg_type})
         super().send(msg)
 
     def recv(self):
@@ -54,6 +57,10 @@ class JSONClient(BaseClient):
       except ValueError as e:
         return False
       return True
+
+    def stop(self):
+        self.send("", msg_type=MessageType.TERMINATE)
+        self.sock.close()
 
 
 if __name__ == '__main__':

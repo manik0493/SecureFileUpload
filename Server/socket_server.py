@@ -1,5 +1,8 @@
 import socket
 import threading
+import sys
+sys.path.append('../shared')
+from message_type import MessageType
 
 class BaseServer(object):
     def __init__(self, address='localhost', port=10000):
@@ -44,7 +47,7 @@ class BaseServer(object):
             else:
                 print( 'no more data from', client_address)
                 return False
-        return True
+        return data
 
     def msg_handler(self, connection, client_address):
         try:
@@ -98,16 +101,16 @@ class JSONServer(BaseServer):
     def __init__(self, address='localhost', port=10000):
         super().__init__(address, port)
 
-    def _send(self, socket, msg):
-        if not self._is_json(msg):
-            msg = json.dumps({"data": str(msg)})
+    def _send(self, socket, msg, msg_type=0):
+        # if not self._is_json(msg):
+        msg = json.dumps({"data": str(msg), "type": msg_type})
         super()._send(socket, msg)
 
     def _recv(self, socket):
         return json.loads(super()._recv(socket))
 
     def _process_msg(self, connection, data):
-        if data['data'] == "<TERMINATE>":
+        if data['type'] == MessageType.TERMINATE:
             print("Client closing connection. Closing socket")
             return False
         else:
@@ -119,7 +122,7 @@ class JSONServer(BaseServer):
             else:
                 print( 'no more data from', client_address)
                 return False
-        return True
+        return data
 
     def _is_json(self, json_msg):
       try:
