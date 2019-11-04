@@ -1,5 +1,6 @@
 import socket
 import sys
+import time
 sys.path.append('../shared')
 from message_type import MessageType
 
@@ -60,6 +61,7 @@ class JSONClient(BaseClient):
 
     def stop(self):
         self.send("", msg_type=MessageType.TERMINATE)
+        time.sleep(0.5)
         self.sock.close()
 
 
@@ -67,5 +69,5 @@ if __name__ == '__main__':
     client = JSONClient('localhost', 10000)
     message = input()
     client.send(message)
-    print(client.recv())
+    # print(client.recv())
     client.stop()
