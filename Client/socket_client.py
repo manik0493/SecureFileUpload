@@ -35,9 +35,29 @@ class BaseClient(object):
         self.send("<TERMINATE>")
         self.sock.close()
 
+import json
+class JSONClient(BaseClient):
+    def __init__(self, address, port):
+        super().__init__(address, port)
+
+    def send(self, msg):
+        if not self._is_json(msg):
+            msg = json.dumps({"data": str(msg)})
+        super().send(msg)
+
+    def recv(self):
+        return json.loads(super().recv())
+
+    def _is_json(self, json_msg):
+      try:
+        json_object = json.loads(json_msg)
+      except ValueError as e:
+        return False
+      return True
+
 
 if __name__ == '__main__':
-    client = BaseClient('localhost', 10000)
+    client = JSONClient('localhost', 10000)
     message = input()
     client.send(message)
     print(client.recv())

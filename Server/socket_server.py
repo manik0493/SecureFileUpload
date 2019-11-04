@@ -30,6 +30,22 @@ class BaseServer(object):
             thread.start()
         # self.msg_handler(connection, client_address)
 
+    # return False to break connection
+    def _process_msg(self, connection, data):
+        if data == b"<TERMINATE>":
+            print("Client closing connection. Closing socket")
+            return False
+        else:
+            print( 'received "%s"' % data)
+            if data:
+                print( 'sending data back to the client')
+                self._send(connection, data)
+
+            else:
+                print( 'no more data from', client_address)
+                return False
+        return True
+
     def msg_handler(self, connection, client_address):
         try:
             print( 'connection from', client_address)
@@ -37,18 +53,8 @@ class BaseServer(object):
             # Receive the data in small chunks and retransmit it
             while True:
                 data = self._recv(connection)
-                if data == b"<TERMINATE>":
-                    print("Client closing connection. Closing socket")
+                if not self._process_msg(connection, data):
                     break
-                else:
-                    print( 'received "%s"' % data)
-                    if data:
-                        print( 'sending data back to the client')
-                        self._send(connection, data)
-
-                    else:
-                        print( 'no more data from', client_address)
-                        break
         # except:
             # print("Error occured, closing client socket")
         finally:
@@ -97,10 +103,28 @@ class JSONServer(BaseServer):
             msg = json.dumps({"data": str(msg)})
         super()._send(socket, msg)
 
+    def _recv(self, socket):
+        return json.loads(super()._recv(socket))
+
+    def _process_msg(self, connection, data):
+        if data['data'] == "<TERMINATE>":
+            print("Client closing connection. Closing socket")
+            return False
+        else:
+            print( 'received "%s"' % data)
+            if data:
+                print( 'sending data back to the client')
+                self._send(connection, data)
+
+            else:
+                print( 'no more data from', client_address)
+                return False
+        return True
+
     def _is_json(self, json_msg):
       try:
         json_object = json.loads(json_msg)
-      except ValueError as e:
+      except:
         return False
       return True
 
