@@ -46,9 +46,10 @@ class ClientHandler(BaseClientHandler):
             while True:
                 data = self._recv()
                 if not self._process_msg(data):
+                    print("Quitting")
                     break
-        # except:
-            # print("Error occured, closing client socket")
+        except:
+            print("Error occured, closing client socket")
         finally:
             self.status = self.FINISHED
             # Clean up the connection
@@ -60,6 +61,7 @@ class ClientHandler(BaseClientHandler):
 
         amount_received = 0
         amount_expected = msg_size
+        print("EXPECTING", msg_size)
 
         complete_data = b''
         while amount_received < amount_expected:
@@ -89,8 +91,10 @@ class JSONClientHandler(ClientHandler):
 
     def _send(self, msg, msg_type=0):
         # if not self._is_json(msg):
-        msg = json.dumps({"data": str(msg), "type": msg_type})
-        super()._send(socket, msg)
+        if type(msg) == bytes:
+            msg = msg.decode()
+        msg = json.dumps({"data": msg, "type": msg_type})
+        super()._send(msg)
 
     def _process_msg(self, data):
         if data['type'] == MessageType.TERMINATE:
