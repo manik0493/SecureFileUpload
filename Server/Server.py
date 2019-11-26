@@ -46,6 +46,13 @@ class AuthClientHandler(JSONClientHandler):
             else:
                 with open(filename, 'wb') as f:
                     f.write(file_content)
+
+        if data['type'] == MessageType.DOWNLOAD_REQ:
+            filename = data['data']
+            file_contents = open(filename, 'rb').read()
+            file_contents = encryption_utils.encrypt(file_contents, self.session_key)
+            self._send(file_contents, msg_type=MessageType.DOWNLOAD, extra=filename.split("/")[-1])
+
         return data
 
 class AuthServer(JSONServer):

@@ -59,6 +59,18 @@ class AuthClient(JSONClient):
 
     def download(self, file):
         self.send(file, msg_type=MessageType.DOWNLOAD_REQ)
+        data = self.recv()
+
+        encrypted_file_content = data['data']
+        filename = data['extra']
+        file_content = encryption_utils.decrypt(encrypted_file_content, self.decrypt_map)
+
+        if type(file_content) == str:
+            with open(file, 'w') as f:
+                f.write(file_content)
+        else:
+            with open(file, 'wb') as f:
+                f.write(file_content)
 
 
 def read_file():

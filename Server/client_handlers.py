@@ -100,7 +100,7 @@ class JSONClientHandler(ClientHandler):
     def _send(self, msg, msg_type=0, extra=None):
         # if not self._is_json(msg):
         if type(msg) == bytes:
-            msg = msg.decode()
+            msg = str(msg)
         msg = {"data": msg, "type": msg_type}
         if extra is not None:
             msg['extra'] = extra
