@@ -44,13 +44,24 @@ class JSONClient(BaseClient):
     def __init__(self, address, port):
         super().__init__(address, port)
 
-    def send(self, msg, msg_type=0):
+    def send(self, msg, msg_type=0, extra=None):
         # if not self._is_json(msg):
-        msg = json.dumps({"data": str(msg), "type": msg_type})
+        msg = {"data": str(msg), "type": msg_type}
+        if extra is not None:
+            msg['extra'] = extra
+        msg = json.dumps(msg)
         super().send(msg)
 
     def recv(self):
-        return json.loads(super().recv())
+        data = json.loads(super().recv())
+        try:
+            data['data'] = eval(data['data'])
+            print("R", data)
+            data['data'] = data['data'].decode()
+            print("R", data)
+        except Exception as e:
+            pass
+        return data
 
     def _is_json(self, json_msg):
       try:

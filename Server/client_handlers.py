@@ -1,6 +1,7 @@
 import threading
 import json
 import sys
+import traceback
 sys.path.append('../shared')
 from message_type import MessageType
 
@@ -48,8 +49,9 @@ class ClientHandler(BaseClientHandler):
                 if not self._process_msg(data):
                     print("Quitting")
                     break
-        except:
-            print("Error occured, closing client socket")
+        except Exception as e:
+            print("Error occured, closing client socket", e)
+            traceback.print_exc()
         finally:
             self.status = self.FINISHED
             # Clean up the connection
@@ -87,13 +89,25 @@ class JSONClientHandler(ClientHandler):
         super().__init__(socket, address)
 
     def _recv(self):
-        return json.loads(super()._recv())
+        data = json.loads(super()._recv())
+        print("R", data)
+        try:
+            data['data'] = eval(data['data'])
+            print("R", data)
+            data['data'] = data['data'].decode()
+            print("R", data)
+        except Exception as e:
+            pass
+        return data
 
-    def _send(self, msg, msg_type=0):
+    def _send(self, msg, msg_type=0, extra=None):
         # if not self._is_json(msg):
         if type(msg) == bytes:
             msg = msg.decode()
-        msg = json.dumps({"data": msg, "type": msg_type})
+        msg = {"data": msg, "type": msg_type}
+        if extra is not None:
+            msg['extra'] = extra
+        msg = json.dumps(msg)
         super()._send(msg)
 
     def _process_msg(self, data):

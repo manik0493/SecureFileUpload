@@ -26,6 +26,16 @@ class AuthClientHandler(JSONClientHandler):
             nonce = int(session_dict['nonce'])
             Configs.CLIENT_SESSION_BOOK[session_dict['SessionKey']] = 0
             self._send(str(nonce+1), msg_type=MessageType.AUTH_FIN)
+
+        if data['type'] == MessageType.UPLOAD:
+            file_content = data['data']
+            filename = data['extra']
+            if type(file_content) == str:
+                with open(filename, 'w') as f:
+                    f.write(file_content)
+            else:
+                with open(filename, 'wb') as f:
+                    f.write(file_content)
         return data
 
 class AuthServer(JSONServer):

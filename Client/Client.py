@@ -4,7 +4,7 @@ import uuid, time
 from random import randint
 
 from socket_client import JSONClient
-import sys
+import sys, os
 sys.path.append('../shared')
 from message_type import MessageType
 
@@ -19,7 +19,7 @@ def print_menu():
 
 class AuthClient(JSONClient):
     def __init__(self, address='localhost', port=10000):
-        self.session_Id=''
+        self.session_id=''
         super().__init__(address, port)
 
     def auth(self):
@@ -27,16 +27,15 @@ class AuthClient(JSONClient):
         response = self.recv()['data'] #requests.get("http://localhost:5000/public_key_exchange_api/pke")
         pubkey = RSA.import_key(response)
         encryptor = PKCS1_OAEP.new(pubkey)
-        Sessiondict = {'SessionKey':uuid.uuid1().hex,'nonce':randint(9180483,999999239992399)}
+        session_dict = {'SessionKey':uuid.uuid1().hex,'nonce':randint(9180483,999999239992399)}
         print("Before Connection..\n")
-        print(Sessiondict)
-        nonce = Sessiondict['nonce']
-        Session_Id = Sessiondict['SessionKey']
-        encrypted = encryptor.encrypt(bytes(str(Sessiondict),'utf-8'))
+        print(session_dict)
+        nonce = session_dict['nonce']
+        self.session_id = session_dict['SessionKey']
+        encrypted = encryptor.encrypt(bytes(str(session_dict),'utf-8'))
         PARAMS={'packet':encrypted}
         print("Encrypted Session Key and nonce: \n")
         print(PARAMS)
-        time.sleep(1)
         self.send(encrypted, msg_type=MessageType.AUTH_ACK)
         response = self.recv()['data'] #requests.get("http://localhost:5000/public_key_exchange_api/connect",json={"packet": str(encrypted)})
         print("After connection..\n")
@@ -46,6 +45,9 @@ class AuthClient(JSONClient):
         else:
             print("Incorrect Nonce Recieved\n")
             return False
+
+    def upload(self, file):
+        self.send(open(file, 'rb').read(), msg_type=MessageType.UPLOAD, extra=file.split("/")[-1])
 
 
 def read_file():
@@ -61,11 +63,15 @@ if __name__=='__main__':
     # read_file()
     client = AuthClient()
     authenticated = False
-    while(True):
+    while True:
         print_menu()
         choice = input("Please enter your choice: ")
         if int(choice) == 1 and client.auth():
             authenticated = True
             print("Connected!\n")
+        elif int(choice) == 2 and authenticated:
+            file_path = input("File path ?")
+            if os.path.exists(file_path):
+                client.upload(file_path)
         else:
             break
