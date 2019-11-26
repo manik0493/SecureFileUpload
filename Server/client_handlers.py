@@ -63,13 +63,13 @@ class ClientHandler(BaseClientHandler):
 
         amount_received = 0
         amount_expected = msg_size
-        print("EXPECTING", msg_size)
+        # print("EXPECTING", msg_size)
 
         complete_data = b''
         while amount_received < amount_expected:
             data = socket.recv(min([1024, amount_expected - amount_received]))
             amount_received += len(data)
-            print( 'received "%s"' % data)
+            # print( 'received "%s"' % data)
             complete_data += data
 
 
@@ -77,7 +77,7 @@ class ClientHandler(BaseClientHandler):
 
     def _send(self, msg):
         socket = self.socket
-        print( 'sending "%s"' % msg)
+        # print( 'sending "%s"' % msg)
         if type(msg) != bytes:
             msg = msg.encode()
         msg_size = len(msg)
@@ -90,12 +90,9 @@ class JSONClientHandler(ClientHandler):
 
     def _recv(self):
         data = json.loads(super()._recv())
-        print("R", data)
         try:
             data['data'] = eval(data['data'])
-            print("R", data)
             data['data'] = data['data'].decode()
-            print("R", data)
         except Exception as e:
             pass
         return data

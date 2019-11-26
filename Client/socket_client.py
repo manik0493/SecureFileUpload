@@ -14,7 +14,7 @@ class BaseClient(object):
 
 
     def send(self, msg):
-        print( 'sending "%s"' % msg)
+        # print( 'sending "%s"' % msg)
         if type(msg) != bytes:
             msg = msg.encode()
         msg_size = len(msg)
@@ -31,7 +31,7 @@ class BaseClient(object):
         while amount_received < amount_expected:
             data = self.sock.recv(min([1024, amount_expected - amount_received]))
             amount_received += len(data)
-            print( 'received "%s"' % data)
+            # print( 'received "%s"' % data)
             complete_data += data
         return complete_data
 
@@ -56,9 +56,7 @@ class JSONClient(BaseClient):
         data = json.loads(super().recv())
         try:
             data['data'] = eval(data['data'])
-            print("R", data)
             data['data'] = data['data'].decode()
-            print("R", data)
         except Exception as e:
             pass
         return data

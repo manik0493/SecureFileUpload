@@ -1,6 +1,6 @@
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-import uuid, time
+import uuid, time, hashlib
 from random import randint
 
 from socket_client import JSONClient
@@ -46,8 +46,29 @@ class AuthClient(JSONClient):
             print("Incorrect Nonce Recieved\n")
             return False
 
+    def encrypt(self, data):
+        m = hashlib.sha1()
+
+        encrypted_data = []
+        def chunks(l, n):
+            """Yield successive n-sized chunks from l."""
+            for i in range(0, len(l), n):
+                yield l[i:i + n]
+
+        self.session_id = ''
+        for chunk in chunks(data, 2):
+            dec = chunk
+            enc = hashlib.sha1(self.session_id.encode() + dec).digest()
+            encrypted_data.append(enc)
+            # print(len(encrypted_data[-1]))
+
+
+        return b''.join(encrypted_data)
+
     def upload(self, file):
-        self.send(open(file, 'rb').read(), msg_type=MessageType.UPLOAD, extra=file.split("/")[-1])
+        file_contents = open(file, 'rb').read()
+        file_contents = self.encrypt(file_contents)
+        self.send(file_contents, msg_type=MessageType.UPLOAD, extra=file.split("/")[-1])
 
 
 def read_file():
@@ -61,7 +82,7 @@ def read_file():
 
 if __name__=='__main__':
     # read_file()
-    client = AuthClient()
+    client = AuthClient(port=10000)
     authenticated = False
     while True:
         print_menu()
