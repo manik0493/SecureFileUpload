@@ -84,7 +84,7 @@ def read_file():
 
 if __name__=='__main__':
     # read_file()
-    client = AuthClient(port=10001)
+    client = AuthClient(port=10002)
     authenticated = False
     while True:
         print_menu()

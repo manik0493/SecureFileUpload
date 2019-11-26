@@ -70,7 +70,7 @@ if __name__ == '__main__':
     Configs.PUBLIC_KEY_OBJECT = pub_key
     Configs.CLIENT_SESSION_BOOK = {}
 
-    server = AuthServer(port=10001)
+    server = AuthServer(port=10002)
     server.start()
     server.stop()
 
