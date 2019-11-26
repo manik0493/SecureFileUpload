@@ -1,12 +1,14 @@
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-import uuid, time, hashlib
+import uuid, time, hashlib, tqdm
 from random import randint
 
 from socket_client import JSONClient
 import sys, os
+
 sys.path.append('../shared')
 from message_type import MessageType
+import encryption_utils
 
 
 def print_menu():
@@ -21,6 +23,7 @@ class AuthClient(JSONClient):
     def __init__(self, address='localhost', port=10000):
         self.session_id=''
         super().__init__(address, port)
+        self.decrypt_map = {}
 
     def auth(self):
         self.send("", msg_type=MessageType.AUTH_REQ)
@@ -32,6 +35,9 @@ class AuthClient(JSONClient):
         print(session_dict)
         nonce = session_dict['nonce']
         self.session_id = session_dict['SessionKey']
+
+        self.decrypt_map = encryption_utils.generate_decrypt_map(self.session_id, data_size=2)
+
         encrypted = encryptor.encrypt(bytes(str(session_dict),'utf-8'))
         PARAMS={'packet':encrypted}
         print("Encrypted Session Key and nonce: \n")
@@ -46,29 +52,13 @@ class AuthClient(JSONClient):
             print("Incorrect Nonce Recieved\n")
             return False
 
-    def encrypt(self, data):
-        m = hashlib.sha1()
-
-        encrypted_data = []
-        def chunks(l, n):
-            """Yield successive n-sized chunks from l."""
-            for i in range(0, len(l), n):
-                yield l[i:i + n]
-
-        self.session_id = ''
-        for chunk in chunks(data, 2):
-            dec = chunk
-            enc = hashlib.sha1(self.session_id.encode() + dec).digest()
-            encrypted_data.append(enc)
-            # print(len(encrypted_data[-1]))
-
-
-        return b''.join(encrypted_data)
-
     def upload(self, file):
         file_contents = open(file, 'rb').read()
-        file_contents = self.encrypt(file_contents)
+        file_contents = encryption_utils.encrypt(file_contents, self.session_id)
         self.send(file_contents, msg_type=MessageType.UPLOAD, extra=file.split("/")[-1])
+
+    def download(self, file):
+        self.send(file, msg_type=MessageType.DOWNLOAD_REQ)
 
 
 def read_file():
@@ -82,7 +72,7 @@ def read_file():
 
 if __name__=='__main__':
     # read_file()
-    client = AuthClient(port=10000)
+    client = AuthClient(port=10001)
     authenticated = False
     while True:
         print_menu()
@@ -91,8 +81,11 @@ if __name__=='__main__':
             authenticated = True
             print("Connected!\n")
         elif int(choice) == 2 and authenticated:
-            file_path = input("File path ?")
+            file_path = input("File path : ")
             if os.path.exists(file_path):
                 client.upload(file_path)
+        elif int(choice) == 3 and authenticated:
+            file_name = input("File name : ")
+            client.download(file_name)
         else:
             break
